@@ -55,9 +55,9 @@ class PQStat():
             tp = self.pq_per_cat[label].tp
             fp = self.pq_per_cat[label].fp
             fn = self.pq_per_cat[label].fn
-            n += 1
             if tp + fp + fn == 0:
                 continue
+            n += 1
             pq += iou / (tp + 0.5 * fp + 0.5 * fn)
             sq += iou / tp if tp != 0 else 0
             rq += tp / (tp + 0.5 * fp + 0.5 * fn)

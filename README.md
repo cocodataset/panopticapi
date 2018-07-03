@@ -10,5 +10,7 @@ This API is an experimental version of [COCO 2018 Panoptic Segmentation Task API
 
 - **semantic_data.py** script extracts semantic segmentation annotation for stuff and things categories from panoptic ground truth. It saves the semantic segmentation as a single channel PNG.
 
+- **visualization.py** script provides an example of visualization for panoptic segmentation data.
+
 ## Contact
 If you have any questions regarding this API, please contact us at alexander.n.kirillov-at-gmail.com.

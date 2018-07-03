@@ -15,9 +15,28 @@ import PIL.Image as Image
 
 OFFSET = 1000
 
-def convert_single_core(proc_id, image_set, categories, source_folder, segmentations_folder, VOID=0):
-    index_array = np.random.permutation(1 << 24 - 2) + 1 # segment' ids are random for better visual appearance
+def random_color(base, max_dist=30):
+    new_color = base + np.random.randint(low=-max_dist, high=max_dist+1, size=3)
+    return tuple(np.maximum(0, np.minimum(255, new_color)))
 
+
+def get_color(base_color_array, taken_colors):
+    base_color = tuple(base_color_array)
+    if base_color not in taken_colors:
+        taken_colors.add(base_color)
+        return base_color
+    while True:
+        color = random_color(base_color_array)
+        if color not in taken_colors:
+             taken_colors.add(color)
+             return color
+
+
+def rgb2id(color):
+    return color[0] + 256 * color[1] + 256 * 256 * color[2]
+
+
+def convert_single_core(proc_id, image_set, categories, source_folder, segmentations_folder, VOID=0):
     annotations = []
     for working_idx, image_info in enumerate(image_set):
         if working_idx % 100 == 0:
@@ -31,9 +50,14 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
             sys.exit(-1)
 
         pan = OFFSET * original_format[:, :, 0] + original_format[:, :, 1]
-        pan_format = np.zeros((original_format.shape[0], original_format.shape[1]), dtype=np.uint32)
+        pan_format = np.zeros((original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
 
-        idx = 0
+        taken_colors = set([(0, 0, 0)])
+        for category in categories.values():
+            if category['isthing'] == 1:
+                continue
+            taken_colors.add(tuple(category['color']))
+
         l = np.unique(pan)
         segm_info = []
         for el in l:
@@ -43,22 +67,20 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
             if sem not in categories:
                 print('Unknown semantic label {}'.format(sem))
                 sys.exit(-1)
+            if categories[sem]['isthing'] == 0:
+                color = categories[sem]['color']
+            else:
+                color = get_color(categories[sem]['color'], taken_colors)
             mask = pan == el
-            segment_idx = index_array[idx]
-            idx += 1
-            pan_format[mask] = segment_idx
-            segm_info.append({"id": segment_idx,
+            pan_format[mask] = color
+            segm_info.append({"id": rgb2id(color),
                               "category_id": sem})
 
         annotations.append({'image_id': image_info['id'],
                             'file_name': file_name,
                             "segments_info": segm_info})
 
-        pan_rgb_format = np.zeros((original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
-        for i in range(3):
-            pan_rgb_format[:, :, i] = pan_format % 256
-            pan_format //= 256
-        Image.fromarray(pan_rgb_format).save(os.path.join(segmentations_folder, file_name))
+        Image.fromarray(pan_format).save(os.path.join(segmentations_folder, file_name))
     print('Core: {}, all {} images processed'.format(proc_id, len(image_set)))
     return annotations
 
@@ -72,7 +94,7 @@ def converter(source_folder, images_json_file,
     with open(images_json_file, 'r') as f:
         d_coco = json.load(f)
     images = d_coco['images']
-    categories = set(el['id'] for el in d_coco['categories'])
+    categories = {el['id']: el for el in d_coco['categories']}
 
     print("CONVERTING...")
     print("2 channels PNG panoptic format:")
