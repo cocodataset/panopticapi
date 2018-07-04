@@ -12,7 +12,9 @@ import multiprocessing
 
 import PIL.Image as Image
 
+from utils import get_traceback
 
+@get_traceback
 def extract_semantic_single_core(proc_id, annotations_set, segmentations_folder, semantic_seg_folder):
     for working_idx, annotation in enumerate(annotations_set):
         if working_idx % 100 == 0:
@@ -22,8 +24,7 @@ def extract_semantic_single_core(proc_id, annotations_set, segmentations_folder,
         try:
             pan_format = np.array(Image.open(os.path.join(segmentations_folder, file_name)), dtype=np.uint32)
         except FileNotFoundError:
-            print('no prediction png file for id: {}'.format(annotation['id']))
-            sys.exit(-1)
+            raise KeyError('no prediction png file for id: {}'.format(annotation['id']))
 
         pan = pan_format[:, :, 0] + 256 * pan_format[:, :, 1] + 256 * 256 * pan_format[:, :, 2]
         semantic = np.zeros(pan.shape, dtype=np.uint8)

@@ -13,29 +13,44 @@ import itertools
 
 import PIL.Image as Image
 
+from utils import get_traceback
+
 OFFSET = 1000
 
-def random_color(base, max_dist=30):
-    new_color = base + np.random.randint(low=-max_dist, high=max_dist+1, size=3)
-    return tuple(np.maximum(0, np.minimum(255, new_color)))
+class ColorGenerator():
+    def __init__(self, categories):
+        self.taken_colors = set([0, 0, 0])
+        self.categories = categories
+        for category in self.categories.values():
+            if category['isthing'] == 0:
+                self.taken_colors.add(tuple(category['color']))
 
+    def get_color(self, cat_id):
+        def random_color(base, max_dist=30):
+            new_color = base + np.random.randint(low=-max_dist, high=max_dist+1, size=3)
+            return tuple(np.maximum(0, np.minimum(255, new_color)))
 
-def get_color(base_color_array, taken_colors):
-    base_color = tuple(base_color_array)
-    if base_color not in taken_colors:
-        taken_colors.add(base_color)
-        return base_color
-    while True:
-        color = random_color(base_color_array)
-        if color not in taken_colors:
-             taken_colors.add(color)
-             return color
+        category = self.categories[cat_id]
+        if category['isthing'] == 0:
+            return category['color']
+        base_color_array = category['color']
+        base_color = tuple(base_color_array)
+        if base_color not in self.taken_colors:
+            self.taken_colors.add(base_color)
+            return base_color
+        else:
+            while True:
+                color = random_color(base_color_array)
+                if color not in self.taken_colors:
+                     self.taken_colors.add(color)
+                     return color
 
 
 def rgb2id(color):
     return color[0] + 256 * color[1] + 256 * 256 * color[2]
 
 
+@get_traceback
 def convert_single_core(proc_id, image_set, categories, source_folder, segmentations_folder, VOID=0):
     annotations = []
     for working_idx, image_info in enumerate(image_set):
@@ -46,17 +61,12 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
         try:
             original_format = np.array(Image.open(os.path.join(source_folder, file_name)), dtype=np.uint32)
         except FileNotFoundError:
-            print('no prediction png file for id: {}'.format(image_info['id']))
-            sys.exit(-1)
+            raise KeyError('no prediction png file for id: {}'.format(image_info['id']))
 
         pan = OFFSET * original_format[:, :, 0] + original_format[:, :, 1]
         pan_format = np.zeros((original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
 
-        taken_colors = set([(0, 0, 0)])
-        for category in categories.values():
-            if category['isthing'] == 1:
-                continue
-            taken_colors.add(tuple(category['color']))
+        color_gererator = ColorGenerator(categories)
 
         l = np.unique(pan)
         segm_info = []
@@ -65,13 +75,9 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
             if sem == VOID:
                 continue
             if sem not in categories:
-                print('Unknown semantic label {}'.format(sem))
-                sys.exit(-1)
-            if categories[sem]['isthing'] == 0:
-                color = categories[sem]['color']
-            else:
-                color = get_color(categories[sem]['color'], taken_colors)
+                raise KeyError('Unknown semantic label {}'.format(sem))
             mask = pan == el
+            color = color_gererator.get_color(sem)
             pan_format[mask] = color
             segm_info.append({"id": rgb2id(color),
                               "category_id": sem})

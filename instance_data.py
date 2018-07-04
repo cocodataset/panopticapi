@@ -12,6 +12,8 @@ import multiprocessing
 
 import PIL.Image as Image
 
+from utils import get_traceback
+
 try:
     # set up path for pycocotools
     # sys.path.append('./cocoapi-master/PythonAPI/')
@@ -20,7 +22,7 @@ except:
     print("Please pycocotools module from https://github.com/cocodataset/cocoapi")
     sys.exit(-1)
 
-
+@get_traceback
 def extract_instance_single_core(proc_id, annotations_set, categories, segmentations_folder, instance_json_file):
     annotations_instance = []
     for working_idx, annotation in enumerate(annotations_set):
@@ -31,8 +33,7 @@ def extract_instance_single_core(proc_id, annotations_set, categories, segmentat
         try:
             pan_format = np.array(Image.open(os.path.join(segmentations_folder, file_name)), dtype=np.uint32)
         except FileNotFoundError:
-            print('no prediction png file for id: {}'.format(annotation['id']))
-            sys.exit(-1)
+            raise KeyError('no prediction png file for id: {}'.format(annotation['id']))
 
         pan = pan_format[:, :, 0] + 256 * pan_format[:, :, 1] + 256 * 256 * pan_format[:, :, 2]
 

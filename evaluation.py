@@ -14,6 +14,8 @@ import multiprocessing
 
 import PIL.Image as Image
 
+from utils import get_traceback
+
 OFFSET = 256 * 256 * 256
 VOID = 0
 
@@ -65,6 +67,7 @@ class PQStat():
         return {'pq': pq / n, 'sq': sq / n, 'rq': rq / n, 'n': n}
 
 
+@get_traceback
 def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder):
     pq_stat = PQStat()
 
@@ -89,8 +92,7 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder):
             if label not in pred_segms:
                 if label == VOID:
                     continue
-                print('In the image {} segment {} presented in PNG and not presented in JSON.'.format(img_id, label))
-                sys.exit(-1)
+                raise KeyError('In the image {} segment {} presented in PNG and not presented in JSON.'.format(gt_ann['image_id'], label))
             pred_segms[label]['area'] = label_cnt
 
         # confusion matrix calculation
