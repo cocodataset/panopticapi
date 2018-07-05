@@ -68,7 +68,7 @@ class PQStat():
 
 
 @get_traceback
-def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder):
+def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, categories):
     pq_stat = PQStat()
 
     idx = 0
@@ -81,21 +81,27 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder):
         pan_gt = pan_gt[:, :, 0] + pan_gt[:, :, 1] * 256 + pan_gt[:, :, 2] * 256 * 256
         pan_pred = np.array(Image.open(os.path.join(pred_folder, pred_ann['file_name'])), dtype=np.uint32)
         pan_pred = pan_pred[:, :, 0] + pan_pred[:, :, 1] * 256 + pan_pred[:, :, 2] * 256 * 256
-        pan_gt_pred = pan_gt.astype(np.uint64) * OFFSET + pan_pred.astype(np.uint64)
 
         gt_segms = {el['id']: el for el in gt_ann['segments_info']}
         pred_segms = {el['id']: el for el in pred_ann['segments_info']}
 
-        # predicted segments area calculation
+        # predicted segments area calculation + prediction sanity checks
+        pred_labels_set = set(el['id'] for el in pred_ann['segments_info'])
         labels, labels_cnt = np.unique(pan_pred, return_counts=True)
         for label, label_cnt in zip(labels, labels_cnt):
             if label not in pred_segms:
                 if label == VOID:
                     continue
-                raise KeyError('In the image {} segment {} presented in PNG and not presented in JSON.'.format(gt_ann['image_id'], label))
+                raise KeyError('In the image with ID {} segment with ID {} is presented in PNG and not presented in JSON.'.format(gt_ann['image_id'], label))
             pred_segms[label]['area'] = label_cnt
+            pred_labels_set.remove(label)
+            if pred_segms[label]['category_id'] not in categories:
+                raise KeyError('In the image with ID {} segment with ID {} has unknown category_id {}.'.format(gt_ann['image_id'], label, pred_segms[label]['category_id']))
+        if len(pred_labels_set) != 0:
+            raise KeyError('In the image with ID {} the following segment IDs {} are presented in JSON and not presented in PNG.'.format(gt_ann['image_id'], list(pred_labels_set)))
 
         # confusion matrix calculation
+        pan_gt_pred = pan_gt.astype(np.uint64) * OFFSET + pan_pred.astype(np.uint64)
         gt_pred_map = {}
         labels, labels_cnt = np.unique(pan_gt_pred, return_counts=True)
         for label, intersection in zip(labels, labels_cnt):
@@ -165,6 +171,7 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
         gt_folder = os.path.join(os.path.dirname(gt_json_file), 'segmentations')
     if pred_folder is None:
         pred_folder = os.path.join(os.path.dirname(pred_json_file), 'segmentations')
+    categories = {el['id']: el for el in gt_json['categories']}
 
     pred_annotations = {el['image_id']: el for el in pred_json['annotations']}
     matched_annotations_list = []
@@ -182,14 +189,13 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
     processes = []
     for proc_id, annotation_set in enumerate(annotations_split):
         p = workers.apply_async(pq_compute_single_core,
-                                (proc_id, annotation_set, gt_folder, pred_folder))
+                                (proc_id, annotation_set, gt_folder, pred_folder, categories))
         processes.append(p)
     pq_stat = PQStat()
     for p in processes:
         pq_stat += p.get()
 
     metrics = [("All", None), ("Things", True), ("Stuff", False)]
-    categories = {el['id']: el for el in gt_json['categories']}
     results = {}
     for name, isthing in metrics:
         results[name] = pq_stat.pq_average(categories, isthing=isthing)
