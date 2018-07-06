@@ -91,7 +91,7 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
     return annotations
 
 
-def converter(source_folder, images_json_file,
+def converter(source_folder, images_json_file, categories_json_file,
               segmentations_folder, predictions_json_file,
               VOID=0):
     start_time = time.time()
@@ -100,7 +100,9 @@ def converter(source_folder, images_json_file,
     with open(images_json_file, 'r') as f:
         d_coco = json.load(f)
     images = d_coco['images']
-    categories = {el['id']: el for el in d_coco['categories']}
+    with open(categories_json_file, 'r') as f:
+        categories_coco = json.load(f)
+    categories = {el['id']: el for el in categories_coco}
 
     print("CONVERTING...")
     print("2 channels PNG panoptic format:")
@@ -137,6 +139,9 @@ if __name__ == "__main__":
                         help="folder that contains predictions in 2 channels PNG format")
     parser.add_argument('--images_json_file', type=str,
                         help="JSON file with correponding image set information")
+    parser.add_argument('--categories_json_file', type=str,
+                        help="JSON file with Panoptic COCO categories informtation",
+                        default='./panoptic_coco_categories.json')
     parser.add_argument('--segmentations_folder', type=str,
                         help="Folder with resulting COCO format segmentations")
     parser.add_argument('--predictions_json_file', type=str,
@@ -144,6 +149,8 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--void', type=int, default=0,
                         help="id that corresponds to VOID region in two channels PNG format")
     args = parser.parse_args()
-    converter(args.source_folder, args.images_json_file,
+    if not os.path.exists(args.segmentations_folder):
+        os.mkdir(args.segmentations_folder)
+    converter(args.source_folder, args.images_json_file, args.categories_json_file,
               args.segmentations_folder, args.predictions_json_file,
               args.void)

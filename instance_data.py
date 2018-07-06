@@ -19,8 +19,7 @@ try:
     # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
 except:
-    print("Please pycocotools module from https://github.com/cocodataset/cocoapi")
-    sys.exit(-1)
+    raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 @get_traceback
 def extract_instance_single_core(proc_id, annotations_set, categories, segmentations_folder, instance_json_file):

@@ -10,7 +10,7 @@ def get_traceback(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             print('Caught exception in worker thread:')
             traceback.print_exc()
             raise e

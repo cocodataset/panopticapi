@@ -48,6 +48,7 @@ class PQStat():
 
     def pq_average(self, categories, isthing):
         pq, sq, rq, n = 0, 0, 0, 0
+        per_class_results = {}
         for label, label_info in categories.items():
             if isthing is not None:
                 cat_isthing = label_info['isthing'] == 1
@@ -58,13 +59,18 @@ class PQStat():
             fp = self.pq_per_cat[label].fp
             fn = self.pq_per_cat[label].fn
             if tp + fp + fn == 0:
+                per_class_results[label] = {'pq': 0.0, 'sq': 0.0, 'rq': 0.0}
                 continue
             n += 1
-            pq += iou / (tp + 0.5 * fp + 0.5 * fn)
-            sq += iou / tp if tp != 0 else 0
-            rq += tp / (tp + 0.5 * fp + 0.5 * fn)
+            pq_class = iou / (tp + 0.5 * fp + 0.5 * fn)
+            sq_class = iou / tp if tp != 0 else 0
+            rq_class = tp / (tp + 0.5 * fp + 0.5 * fn)
+            per_class_results[label] = {'pq': pq_class, 'sq': sq_class, 'rq': rq_class}
+            pq += pq_class
+            sq += sq_class
+            rq += rq_class
 
-        return {'pq': pq / n, 'sq': sq / n, 'rq': rq / n, 'n': n}
+        return {'pq': pq / n, 'sq': sq / n, 'rq': rq / n, 'n': n}, per_class_results
 
 
 @get_traceback
@@ -168,18 +174,22 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
         pred_json = json.load(f)
 
     if gt_folder is None:
-        gt_folder = os.path.join(os.path.dirname(gt_json_file), 'segmentations')
+        gt_folder = gt_json_file.replace('.json', '')
     if pred_folder is None:
-        pred_folder = os.path.join(os.path.dirname(pred_json_file), 'segmentations')
+        pred_folder = pred_json_file.replace('.json', '')
     categories = {el['id']: el for el in gt_json['categories']}
+
+    if not os.path.isdir(gt_folder):
+        raise Exception("Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
+    if not os.path.isdir(pred_folder):
+        raise Exception("Folder {} with predicted segmentations doesn't exist".format(pred_folder))
 
     pred_annotations = {el['image_id']: el for el in pred_json['annotations']}
     matched_annotations_list = []
     for gt_ann in gt_json['annotations']:
         image_id = gt_ann['image_id']
         if image_id not in pred_annotations:
-            print('no prediction for the image with id: {}'.format(img_id))
-            sys.exit(-1)
+            raise Exception('no prediction for the image with id: {}'.format(image_id))
         matched_annotations_list.append((gt_ann, pred_annotations[image_id]))
 
     cpu_num = multiprocessing.cpu_count()
@@ -198,7 +208,9 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
     metrics = [("All", None), ("Things", True), ("Stuff", False)]
     results = {}
     for name, isthing in metrics:
-        results[name] = pq_stat.pq_average(categories, isthing=isthing)
+        results[name], per_class_results = pq_stat.pq_average(categories, isthing=isthing)
+        if name == 'All':
+            results['per_class'] = per_class_results
     print("{:10s}| {:>5s}  {:>5s}  {:>5s} {:>5s}".format("", "PQ", "SQ", "RQ", "N"))
     print("-" * (10 + 7 * 4))
 
