@@ -231,7 +231,7 @@ if __name__ == "__main__":
     parser.add_argument('--pred_json_file', type=str,
                         help="JSON file with predictions data")
     parser.add_argument('--gt_folder', type=str, default=None,
-                        help="Folder with gorund turth COCO format segmentations. Default: 'segmentations' folder in th same location as gt_json_file.")
+                        help="Folder with ground turth COCO format segmentations. Default: 'segmentations' folder in th same location as gt_json_file.")
     parser.add_argument('--pred_folder', type=str, default=None,
                         help="Folder with prediction COCO format segmentations. Default: 'segmentations' folder in th same location as pred_json_file")
     args = parser.parse_args()
