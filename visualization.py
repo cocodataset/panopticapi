@@ -11,8 +11,8 @@ import PIL.Image as Image
 import matplotlib.pyplot as plt
 from skimage.segmentation import find_boundaries
 
-json_file = './sample_data/panoptic_example.json'
-segmentations_folder = './sample_data/segmentations/'
+json_file = './sample_data/panoptic_examples.json'
+segmentations_folder = './sample_data/panoptic_examples/'
 img_folder = './sample_data/input_images/'
 
 with open(json_file, 'r') as f:
