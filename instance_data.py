@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -41,9 +41,12 @@ def extract_instance_single_core(proc_id, annotations_set, categories, segmentat
                 continue
             mask = (pan == segm_info['id']).astype(np.uint8)
             mask = np.expand_dims(mask, axis=2)
+            mask = COCOmask.encode(np.asfortranarray(mask))[0]
+            # 'counts' is returned as binary in Python 3, decode it into a UTF8 string
+            mask['counts'] = mask['counts'].decode('utf8')
             segm_info.pop('id')
             segm_info['image_id'] = annotation['image_id']
-            segm_info['segmentation'] = COCOmask.encode(np.asfortranarray(mask))[0]
+            segm_info['segmentation'] = mask
             annotations_instance.append(segm_info)
 
     print('Core: {}, all {} images processed'.format(proc_id, len(annotations_set)))
