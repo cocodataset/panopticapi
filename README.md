@@ -2,15 +2,29 @@
 This API is an experimental version of [COCO 2018 Panoptic Segmentation Task API](http://cocodataset.org/#panoptic-2018).
 
 ## Summary
-- **evaluation.py** script calculates [PQ metrics](http://cocodataset.org/#panoptic-eval).
+**Evaluation script**
 
-- **format_converter.py** script converts *2 channels PNG panoptic format* (for each pixel first 2 channels of the PNG encode semantic label and instance id respectively) to [*COCO format*](http://cocodataset.org/#format-results).
+*evaluation.py* calculates [PQ metrics](http://cocodataset.org/#panoptic-eval). For more information about the script usage: `python evaluation.py --help`
 
-- **instance_data.py** script extracts things annotations from panoptic ground truth and saves it in [COCO instance segmentation format](http://cocodataset.org/#format-data).
+**Format converters**
 
-- **semantic_data.py** script extracts semantic segmentation annotation for stuff and things categories from panoptic ground truth. It saves the semantic segmentation as a single channel PNG.
+COCO panoptic segmentation is stored in a new [format](http://cocodataset.org/#format-data). Unlike COCO detection format that stores each segment independently, COCO panoptic format stores all segmentations for an image in a single PNG file. This compact representation naturally maintains non-overlapping property of the panoptic segmentation.
 
-- **visualization.py** script provides an example of visualization for panoptic segmentation data.
+We provide several converters for COCO panoptic format. Full description and usage examples are available [here](https://github.com/cocodataset/panopticapi/blob/master/CONVERTERS.md).
+
+**Semantic and instance segmentation heuristic combination**
+
+We provide simple script that heuristically combines semantic and instance segmentation predictions into panoptic segmentation prediction.
+
+The merging logic of the script is described in the panoptic segmentation [paper](https://arxiv.org/abs/1801.00868). In addition, this script is able to filter out stuff predicted segments that have their area below the threshold defined by `--stuff_area_limit` parameter. For more information about the script logic and usage: `python combine_semantic_and_instance_predictions.py --help`
+
+**COCO panoptic segmentation challenge categories**
+
+Json file [panoptic_coco_categories.json](https://github.com/cocodataset/panopticapi/blob/master/panoptic_coco_categories.json) contains the list of all categories used in COCO panoptic segmentation challenge 2018.
+
+**Visualization**
+
+*visualization.py* provides an example of generating visually appealing representation of the panoptic segmentation data.
 
 ## Contact
 If you have any questions regarding this API, please contact us at alexander.n.kirillov-at-gmail.com.

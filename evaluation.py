@@ -14,7 +14,7 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from utils import get_traceback
+from utils import get_traceback, rgb2id
 
 OFFSET = 256 * 256 * 256
 VOID = 0
@@ -84,9 +84,9 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
         idx += 1
 
         pan_gt = np.array(Image.open(os.path.join(gt_folder, gt_ann['file_name'])), dtype=np.uint32)
-        pan_gt = pan_gt[:, :, 0] + pan_gt[:, :, 1] * 256 + pan_gt[:, :, 2] * 256 * 256
+        pan_gt = rgb2id(pan_gt)
         pan_pred = np.array(Image.open(os.path.join(pred_folder, pred_ann['file_name'])), dtype=np.uint32)
-        pan_pred = pan_pred[:, :, 0] + pan_pred[:, :, 1] * 256 + pan_pred[:, :, 2] * 256 * 256
+        pan_pred = rgb2id(pan_pred)
 
         gt_segms = {el['id']: el for el in gt_ann['segments_info']}
         pred_segms = {el['id']: el for el in pred_ann['segments_info']}
@@ -179,6 +179,14 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
         pred_folder = pred_json_file.replace('.json', '')
     categories = {el['id']: el for el in gt_json['categories']}
 
+    print("Evaluation panoptic segmentation metrics:")
+    print("Ground truth:")
+    print("\tSegmentation folder: {}".format(gt_folder))
+    print("\tJSON file: {}".format(gt_json_file))
+    print("Prediction:")
+    print("\tSegmentation folder: {}".format(pred_folder))
+    print("\tJSON file: {}".format(pred_json_file))
+
     if not os.path.isdir(gt_folder):
         raise Exception("Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
     if not os.path.isdir(pred_folder):
@@ -231,8 +239,10 @@ if __name__ == "__main__":
     parser.add_argument('--pred_json_file', type=str,
                         help="JSON file with predictions data")
     parser.add_argument('--gt_folder', type=str, default=None,
-                        help="Folder with ground turth COCO format segmentations. Default: 'segmentations' folder in th same location as gt_json_file.")
+                        help="Folder with ground turth COCO format segmentations. \
+                              Default: X if the corresponding json file is X.json")
     parser.add_argument('--pred_folder', type=str, default=None,
-                        help="Folder with prediction COCO format segmentations. Default: 'segmentations' folder in th same location as pred_json_file")
+                        help="Folder with prediction COCO format segmentations. \
+                              Default: X if the corresponding json file is X.json")
     args = parser.parse_args()
     pq_compute(args.gt_json_file, args.pred_json_file, args.gt_folder, args.pred_folder)
