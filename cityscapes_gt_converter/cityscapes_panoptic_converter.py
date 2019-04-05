@@ -115,5 +115,4 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
     save_json(d, out_file)
 
 if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     panoptic_converter(original_format_folder, out_folder, out_file)

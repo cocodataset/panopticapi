@@ -127,7 +127,6 @@ def convert_panoptic_to_detection_coco_format(input_json_file,
 
 
 if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="The script converts panoptic COCO format to detection \
          COCO format. See this file's head for more information."

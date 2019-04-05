@@ -126,7 +126,6 @@ def converter(source_folder, images_json_file, categories_json_file,
 
 
 if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="This script converts panoptic segmentation predictions \
         stored in 2 channels panoptic format to COCO panoptic format. See this \

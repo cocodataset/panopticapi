@@ -177,7 +177,6 @@ def extract_semantic(input_json_file,
 
 
 if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="This script converts data in panoptic COCO format to \
         semantic segmentation. All segments with the same semantic class in one \
