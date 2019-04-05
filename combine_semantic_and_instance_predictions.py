@@ -54,7 +54,7 @@ def combine_to_panoptic_single_core(proc_id, img_ids, img_id2img, inst_by_image,
                                 img['width']), dtype=np.uint32)
         used = None
         annotation = {}
-        annotation['image_id'] = img_id
+        annotation['image_id'] = int(img_id)
         annotation['file_name'] = img['file_name'].replace('.jpg', '.png')
 
         segments_info = []
