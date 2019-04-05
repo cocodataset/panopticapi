@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 '''
 This script converts panoptic COCO format to detection COCO format. More
 information about the formats can be found here:
@@ -21,13 +21,13 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from utils import get_traceback, rgb2id
+from panopticapi.utils import get_traceback, rgb2id, save_json
 
 try:
     # set up path for pycocotools
     # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
-except:
+except Exception:
     raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 @get_traceback
@@ -57,7 +57,9 @@ def convert_panoptic_to_detection_coco_format_single_core(
             mask = np.expand_dims(mask, axis=2)
             segm_info.pop('id')
             segm_info['image_id'] = annotation['image_id']
-            segm_info['segmentation'] = COCOmask.encode(np.asfortranarray(mask))[0]
+            rle = COCOmask.encode(np.asfortranarray(mask))[0]
+            rle['counts'] = rle['counts'].decode('utf8')
+            segm_info['segmentation'] = rle
             annotations_detection.append(segm_info)
 
     print('Core: {}, all {} images processed'.format(proc_id, len(annotations_set)))
@@ -118,14 +120,14 @@ def convert_panoptic_to_detection_coco_format(input_json_file,
         category.pop('color')
         categories_coco_detection.append(category)
     d_coco['categories'] = categories_coco_detection
-    with open(output_json_file, 'w') as f:
-        json.dump(d_coco, f)
+    save_json(d_coco, output_json_file)
 
     t_delta = time.time() - start_time
     print("Time elapsed: {:0.2f} seconds".format(t_delta))
 
 
 if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="The script converts panoptic COCO format to detection \
          COCO format. See this file's head for more information."

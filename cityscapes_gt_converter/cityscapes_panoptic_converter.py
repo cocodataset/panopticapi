@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,13 +9,13 @@ import glob
 import numpy as np
 import PIL.Image as Image
 
-from utils import IdGenerator
+from panopticapi.utils import IdGenerator, save_json
 
 try:
     # set up path for cityscapes scripts
     # sys.path.append('./cityscapesScripts/')
     from cityscapesscripts.helpers.labels import labels, id2label
-except:
+except Exception:
     raise Exception("Please load Cityscapes scripts from https://github.com/mcordts/cityscapesScripts")
 
 original_format_folder = './gtFine/val/'
@@ -111,8 +112,8 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
          'categories': categories,
         }
 
-    with open(out_file, 'w') as f:
-        json.dump(d, f)
+    save_json(d, out_file)
 
 if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     panoptic_converter(original_format_folder, out_folder, out_file)

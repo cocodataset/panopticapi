@@ -4,7 +4,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import functools
 import traceback
+import json
 import numpy as np
+
 
 # The decorator is used to prints an error trhown inside process
 def get_traceback(f):
@@ -19,16 +21,17 @@ def get_traceback(f):
 
     return wrapper
 
-'''
-The class is designed to generate unique IDs that have meaningful RGB encoding.
-Given semantic category unique ID will be generated and its RGB encoding will
-have color close to the predefined semantic category color.
-The RGB encoding used is ID = R * 256 * G + 256 * 256 + B.
-Class constructor takes dictionary {id: category_info}, where all semantic
-class ids are presented and category_info record is a dict with fields
-'isthing' and 'color'
-'''
+
 class IdGenerator():
+    '''
+    The class is designed to generate unique IDs that have meaningful RGB encoding.
+    Given semantic category unique ID will be generated and its RGB encoding will
+    have color close to the predefined semantic category color.
+    The RGB encoding used is ID = R * 256 * G + 256 * 256 + B.
+    Class constructor takes dictionary {id: category_info}, where all semantic
+    class ids are presented and category_info record is a dict with fields
+    'isthing' and 'color'
+    '''
     def __init__(self, categories):
         self.taken_colors = set([0, 0, 0])
         self.categories = categories
@@ -55,8 +58,8 @@ class IdGenerator():
             while True:
                 color = random_color(base_color_array)
                 if color not in self.taken_colors:
-                     self.taken_colors.add(color)
-                     return color
+                    self.taken_colors.add(color)
+                    return color
 
     def get_id(self, cat_id):
         color = self.get_color(cat_id)
@@ -70,9 +73,9 @@ class IdGenerator():
 def rgb2id(color):
     if isinstance(color, np.ndarray) and len(color.shape) == 3:
         if color.dtype == np.uint8:
-            color = color.astype(np.uint32)
+            color = color.astype(np.int32)
         return color[:, :, 0] + 256 * color[:, :, 1] + 256 * 256 * color[:, :, 2]
-    return color[0] + 256 * color[1] + 256 * 256 * color[2]
+    return int(color[0] + 256 * color[1] + 256 * 256 * color[2])
 
 
 def id2rgb(id_map):
@@ -85,7 +88,17 @@ def id2rgb(id_map):
             id_map_copy //= 256
         return rgb_map
     color = []
-    for i in range(3):
+    for _ in range(3):
         color.append(id_map % 256)
         id_map //= 256
     return color
+
+
+def save_json(d, file):
+    def default(o):
+        if isinstance(o, np.int64):
+            return int(o)
+        raise TypeError
+
+    with open(file, 'w') as f:
+        json.dump(d, f, default=default)

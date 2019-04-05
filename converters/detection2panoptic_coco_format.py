@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 '''
 This script converts detection COCO format to panoptic COCO format. More
 information about the formats can be found here:
@@ -17,14 +17,14 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from utils import get_traceback, IdGenerator
+from panopticapi.utils import get_traceback, IdGenerator, save_json
 
 try:
     # set up path for pycocotools
     # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
     from pycocotools.coco import COCO as COCO
-except:
+except Exception:
     raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 @get_traceback
@@ -121,14 +121,14 @@ def convert_detection_to_panoptic_coco_format(input_json_file,
         d_coco = json.load(f)
     d_coco['annotations'] = annotations_coco_panoptic
     d_coco['categories'] = categories_list
-    with open(output_json_file, 'w') as f:
-        json.dump(d_coco, f)
+    save_json(d_coco, output_json_file)
 
     t_delta = time.time() - start_time
     print("Time elapsed: {:0.2f} seconds".format(t_delta))
 
 
 if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="This script converts detection COCO format to panoptic \
             COCO format. See this file's head for more information."

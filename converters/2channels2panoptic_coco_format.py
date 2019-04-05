@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 '''
 This script converts panoptic segmentation predictions stored in 2 channels
 panoptic format to COCO panoptic format.
@@ -30,7 +30,7 @@ import itertools
 
 import PIL.Image as Image
 
-from utils import get_traceback, IdGenerator
+from panopticapi.utils import get_traceback, IdGenerator, save_json
 
 OFFSET = 1000
 
@@ -119,14 +119,14 @@ def converter(source_folder, images_json_file, categories_json_file,
 
     print("Writing final JSON in {}".format(predictions_json_file))
     d_coco['annotations'] = annotations
-    with open(predictions_json_file, 'w') as f:
-        json.dump(d_coco, f)
+    save_json(d_coco, predictions_json_file)
 
     t_delta = time.time() - start_time
     print("Time elapsed: {:0.2f} seconds".format(t_delta))
 
 
 if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="This script converts panoptic segmentation predictions \
         stored in 2 channels panoptic format to COCO panoptic format. See this \

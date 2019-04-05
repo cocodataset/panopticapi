@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -14,7 +14,7 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from utils import get_traceback, rgb2id
+from panopticapi.utils import get_traceback, rgb2id
 
 OFFSET = 256 * 256 * 256
 VOID = 0
@@ -165,6 +165,22 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
     return pq_stat
 
 
+def pq_compute_multi_core(matched_annotations_list, gt_folder, pred_folder, categories):
+    cpu_num = multiprocessing.cpu_count()
+    annotations_split = np.array_split(matched_annotations_list, cpu_num)
+    print("Number of cores: {}, images per core: {}".format(cpu_num, len(annotations_split[0])))
+    workers = multiprocessing.Pool(processes=cpu_num)
+    processes = []
+    for proc_id, annotation_set in enumerate(annotations_split):
+        p = workers.apply_async(pq_compute_single_core,
+                                (proc_id, annotation_set, gt_folder, pred_folder, categories))
+        processes.append(p)
+    pq_stat = PQStat()
+    for p in processes:
+        pq_stat += p.get()
+    return pq_stat
+
+
 def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
 
     start_time = time.time()
@@ -200,18 +216,7 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
             raise Exception('no prediction for the image with id: {}'.format(image_id))
         matched_annotations_list.append((gt_ann, pred_annotations[image_id]))
 
-    cpu_num = multiprocessing.cpu_count()
-    annotations_split = np.array_split(matched_annotations_list, cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(annotations_split[0])))
-    workers = multiprocessing.Pool(processes=cpu_num)
-    processes = []
-    for proc_id, annotation_set in enumerate(annotations_split):
-        p = workers.apply_async(pq_compute_single_core,
-                                (proc_id, annotation_set, gt_folder, pred_folder, categories))
-        processes.append(p)
-    pq_stat = PQStat()
-    for p in processes:
-        pq_stat += p.get()
+    pq_stat = pq_compute_multi_core(matched_annotations_list, gt_folder, pred_folder, categories)
 
     metrics = [("All", None), ("Things", True), ("Stuff", False)]
     results = {}
@@ -224,7 +229,12 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
 
     for name, _isthing in metrics:
         print("{:10s}| {:5.1f}  {:5.1f}  {:5.1f} {:5d}".format(
-              name, 100 * results[name]['pq'], 100 * results[name]['sq'], 100 * results[name]['rq'], results[name]['n']))
+            name,
+            100 * results[name]['pq'],
+            100 * results[name]['sq'],
+            100 * results[name]['rq'],
+            results[name]['n'])
+        )
 
     t_delta = time.time() - start_time
     print("Time elapsed: {:0.2f} seconds".format(t_delta))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 '''
 This script converts data in panoptic COCO format to semantic segmentation. All
 segments with the same semantic class in one image are combined together.
@@ -21,13 +21,13 @@ from collections import defaultdict
 
 import PIL.Image as Image
 
-from utils import get_traceback, rgb2id
+from panopticapi.utils import get_traceback, rgb2id, save_json
 
 try:
     # set up path for pycocotools
     # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
-except:
+except Exception:
     raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 OTHER_CLASS_ID = 183
@@ -68,6 +68,7 @@ def extract_semantic_single_core(proc_id,
                 semantic[mask] = cat_id
             else:
                 RLE = COCOmask.encode(np.asfortranarray(mask.astype('uint8')))
+                RLE['counts'] = RLE['counts'].decode('utf8')
                 RLE_per_category[cat_id].append(RLE)
 
         if save_as_png:
@@ -169,14 +170,14 @@ def extract_semantic(input_json_file,
                                                  'name': 'other',
                                                  'supercategory': 'other'})
         d_coco['categories'] = categories_coco_semantic_seg
-        with open(output_json_file, 'w') as f:
-            json.dump(d_coco, f)
+        save_json(d_coco, output_json_file)
 
     t_delta = time.time() - start_time
     print("Time elapsed: {:0.2f} seconds".format(t_delta))
 
 
 if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description="This script converts data in panoptic COCO format to \
         semantic segmentation. All segments with the same semantic class in one \
