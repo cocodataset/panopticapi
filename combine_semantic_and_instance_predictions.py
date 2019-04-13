@@ -21,7 +21,7 @@ import time
 import multiprocessing
 import copy
 
-from panopticapi.utils import IdGenerator, id2rgb, save_json
+from utils import IdGenerator, id2rgb, save_json
 
 try:
     import PIL.Image     as Image

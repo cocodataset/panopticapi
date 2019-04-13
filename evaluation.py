@@ -14,7 +14,7 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from panopticapi.utils import get_traceback, rgb2id
+from utils import get_traceback, rgb2id
 
 OFFSET = 256 * 256 * 256
 VOID = 0

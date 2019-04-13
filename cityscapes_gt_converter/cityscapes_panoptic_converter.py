@@ -9,7 +9,7 @@ import glob
 import numpy as np
 import PIL.Image as Image
 
-from panopticapi.utils import IdGenerator, save_json
+from utils import IdGenerator, save_json
 
 try:
     # set up path for cityscapes scripts

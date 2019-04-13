@@ -21,7 +21,7 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from panopticapi.utils import get_traceback, rgb2id, save_json
+from utils import get_traceback, rgb2id, save_json
 
 try:
     # set up path for pycocotools
