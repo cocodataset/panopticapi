@@ -95,10 +95,5 @@ def id2rgb(id_map):
 
 
 def save_json(d, file):
-    def default(o):
-        if isinstance(o, np.int64):
-            return int(o)
-        raise TypeError
-
     with open(file, 'w') as f:
-        json.dump(d, f, default=default)
+        json.dump(d, f)

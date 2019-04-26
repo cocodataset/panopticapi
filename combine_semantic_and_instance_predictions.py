@@ -54,7 +54,11 @@ def combine_to_panoptic_single_core(proc_id, img_ids, img_id2img, inst_by_image,
                                 img['width']), dtype=np.uint32)
         used = None
         annotation = {}
-        annotation['image_id'] = int(img_id)
+        try:
+            annotation['image_id'] = int(img_id)
+        except Exception:
+            annotation['image_id'] = img_id
+
         annotation['file_name'] = img['file_name'].replace('.jpg', '.png')
 
         segments_info = []
@@ -189,7 +193,7 @@ def combine_predictions(semseg_json_file, instseg_json_file, images_json_file,
     with open(images_json_file, 'r') as f:
         coco_d = json.load(f)
     coco_d['annotations'] = panoptic_json
-    coco_d['categories'] = categories.values()
+    coco_d['categories'] = list(categories.values())
     save_json(coco_d, panoptic_json_file)
 
     t_delta = time.time() - start_time
