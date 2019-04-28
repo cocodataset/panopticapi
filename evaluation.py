@@ -111,8 +111,8 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
         gt_pred_map = {}
         labels, labels_cnt = np.unique(pan_gt_pred, return_counts=True)
         for label, intersection in zip(labels, labels_cnt):
-            gt_id = label // OFFSET
-            pred_id = label % OFFSET
+            gt_id = (label // OFFSET).astype(np.uint64)
+            pred_id = (label % OFFSET).astype(np.uint64)
             gt_pred_map[(gt_id, pred_id)] = intersection
 
         # count all matched pairs
@@ -120,9 +120,9 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
         pred_matched = set()
         for label_tuple, intersection in gt_pred_map.items():
             gt_label, pred_label = label_tuple
-            if gt_label not in gt_segms:
+            if gt_label == VOID:
                 continue
-            if pred_label not in pred_segms:
+            if pred_label == VOID:
                 continue
             if gt_segms[gt_label]['iscrowd'] == 1:
                 continue
