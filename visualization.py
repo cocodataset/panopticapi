@@ -18,7 +18,7 @@ import PIL.Image as Image
 import matplotlib.pyplot as plt
 from skimage.segmentation import find_boundaries
 
-from utils import IdGenerator, rgb2id
+from panopticapi.utils import IdGenerator, rgb2id
 
 # whether from the PNG are used or new colors are generated
 generate_new_colors = True

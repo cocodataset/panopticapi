@@ -1,10 +1,16 @@
 # COCO 2018 Panoptic Segmentation Task API (Beta version)
 This API is an experimental version of [COCO 2018 Panoptic Segmentation Task API](http://cocodataset.org/#panoptic-2018).
 
+To install panopticapi, run:
+```
+pip install git+https://github.com/cocodataset/panopticapi.git
+```
+
 ## Summary
 **Evaluation script**
 
-*evaluation.py* calculates [PQ metrics](http://cocodataset.org/#panoptic-eval). For more information about the script usage: `python evaluation.py --help`
+[panopticapi/evaluation.py](panopticapi/evaluation.py) calculates [PQ metrics](http://cocodataset.org/#panoptic-eval).
+For more information about the script usage: `python -m panopticapi.evaluation --help`
 
 **Format converters**
 
@@ -14,17 +20,21 @@ We provide several converters for COCO panoptic format. Full description and usa
 
 **Semantic and instance segmentation heuristic combination**
 
-We provide simple script that heuristically combines semantic and instance segmentation predictions into panoptic segmentation prediction.
+We provide [a simple script](panopticapi/combine_semantic_and_instance_predictions.py)
+that heuristically combines semantic and instance segmentation predictions into panoptic segmentation prediction.
 
-The merging logic of the script is described in the panoptic segmentation [paper](https://arxiv.org/abs/1801.00868). In addition, this script is able to filter out stuff predicted segments that have their area below the threshold defined by `--stuff_area_limit` parameter. For more information about the script logic and usage: `python combine_semantic_and_instance_predictions.py --help`
+The merging logic of the script is described in the panoptic segmentation [paper](https://arxiv.org/abs/1801.00868).
+In addition, this script is able to filter out stuff predicted segments that have their area below the threshold defined by `--stuff_area_limit` parameter.
+
+For more information about the script logic and usage: `python -m panopticapi.combine_semantic_and_instance_predictions.py --help`
 
 **COCO panoptic segmentation challenge categories**
 
-Json file [panoptic_coco_categories.json](https://github.com/cocodataset/panopticapi/blob/master/panoptic_coco_categories.json) contains the list of all categories used in COCO panoptic segmentation challenge 2018.
+Json file [panoptic_coco_categories.json](panoptic_coco_categories.json) contains the list of all categories used in COCO panoptic segmentation challenge 2018.
 
 **Visualization**
 
-*visualization.py* provides an example of generating visually appealing representation of the panoptic segmentation data.
+[visualization.py](visualization.py) provides an example of generating visually appealing representation of the panoptic segmentation data.
 
 ## Contact
 If you have any questions regarding this API, please contact us at alexander.n.kirillov-at-gmail.com.
