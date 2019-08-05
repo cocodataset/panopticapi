@@ -17,7 +17,7 @@ import multiprocessing
 
 import PIL.Image as Image
 
-from utils import get_traceback, IdGenerator, save_json
+from panopticapi.utils import get_traceback, IdGenerator, save_json
 
 try:
     # set up path for pycocotools

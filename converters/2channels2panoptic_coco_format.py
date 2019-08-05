@@ -30,7 +30,7 @@ import itertools
 
 import PIL.Image as Image
 
-from utils import get_traceback, IdGenerator, save_json
+from panopticapi.utils import get_traceback, IdGenerator, save_json
 
 OFFSET = 1000
 

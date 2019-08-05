@@ -21,17 +21,11 @@ import time
 import multiprocessing
 import copy
 
-from utils import IdGenerator, id2rgb, save_json
+from panopticapi.utils import IdGenerator, id2rgb, save_json
+
+import PIL.Image     as Image
 
 try:
-    import PIL.Image     as Image
-except Exception:
-    print("Failed to import the image processing packages.")
-    sys.exit(-1)
-
-try:
-    # set up path for pycocotools
-    # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
 except Exception:
     raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
