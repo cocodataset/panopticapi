@@ -34,7 +34,9 @@ Json file [panoptic_coco_categories.json](panoptic_coco_categories.json) contain
 
 **Visualization**
 
-[visualization.py](visualization.py) provides an example of generating visually appealing representation of the panoptic segmentation data.
+[visualization.py](visualization.py) provides an example of generating visually appealing representation of the panoptic segmentation data with matplotlib.
+
+[visualization_cv2.py](visualization_cv2.py) provides an example of generating visually appealing representation of the panoptic segmentation data with opencv.
 
 ## Contact
 If you have any questions regarding this API, please contact us at alexander.n.kirillov-at-gmail.com.
