@@ -27,7 +27,7 @@ class IdGenerator():
     The class is designed to generate unique IDs that have meaningful RGB encoding.
     Given semantic category unique ID will be generated and its RGB encoding will
     have color close to the predefined semantic category color.
-    The RGB encoding used is ID = R * 256 * G + 256 * 256 + B.
+    The RGB encoding used is ID = R + 256 * G + 256 * 256 * B.
     Class constructor takes dictionary {id: category_info}, where all semantic
     class ids are presented and category_info record is a dict with fields
     'isthing' and 'color'
