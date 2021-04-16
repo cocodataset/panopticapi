@@ -137,7 +137,7 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
                 gt_matched.add(gt_label)
                 pred_matched.add(pred_label)
 
-        # count false positives
+        # count false negatives
         crowd_labels_dict = {}
         for gt_label, gt_info in gt_segms.items():
             if gt_label in gt_matched:
