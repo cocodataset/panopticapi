@@ -64,7 +64,7 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
             segment_id, color = id_generator.get_id_and_color(sem)
             pan_format[mask] = color
             segm_info.append({"id": segment_id,
-                              "category_id": sem.item()})
+                              "category_id": int(sem)})
 
         annotations.append({'image_id': image_info['id'],
                             'file_name': file_name,
