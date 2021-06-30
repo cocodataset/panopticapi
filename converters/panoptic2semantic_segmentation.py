@@ -21,7 +21,7 @@ from collections import defaultdict
 
 import PIL.Image as Image
 
-from panopticapi.utils import get_traceback, rgb2id, cat_id2rgb, save_json
+from panopticapi.utils import get_traceback, rgb2id, save_json
 
 try:
     # set up path for pycocotools
@@ -31,6 +31,16 @@ except Exception:
     raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 OTHER_CLASS_ID = 183
+
+
+def cat_id2rgb(categories_json_file):
+    info = json.load(open(categories_json_file, "r"))
+    cat_id_colormap = {}
+    for cat in info:
+        if str(cat['id']) not in cat_id_colormap.keys():
+            cat_id_colormap[str(cat['id'])] = list(cat['color'])
+    return cat_id_colormap
+
 
 @get_traceback
 def extract_semantic_single_core(proc_id,
