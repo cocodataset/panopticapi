@@ -94,6 +94,15 @@ def id2rgb(id_map):
     return color
 
 
+def cat_id2rgb(cat_id_map, categories_json_file):
+    info = json.load(open(categories_json_file, "r"))
+    cat_id_colormap = {}
+    for cat in info:
+        if str(cat['id']) not in cat_id_colormap.keys():
+            cat_id_colormap[str(cat['id'])] = list(cat['color'])
+    return cat_id_colormap
+
+
 def save_json(d, file):
     with open(file, 'w') as f:
         json.dump(d, f)
