@@ -32,6 +32,16 @@ except Exception:
 
 OTHER_CLASS_ID = 183
 
+
+def cat_id2rgb(categories_json_file):
+    info = json.load(open(categories_json_file, "r"))
+    cat_id_colormap = {}
+    for cat in info:
+        if str(cat['id']) not in cat_id_colormap.keys():
+            cat_id_colormap[str(cat['id'])] = list(cat['color'])
+    return cat_id_colormap
+
+
 @get_traceback
 def extract_semantic_single_core(proc_id,
                                  annotations_set,
@@ -40,6 +50,8 @@ def extract_semantic_single_core(proc_id,
                                  semantic_seg_folder,
                                  categories,
                                  save_as_png,
+                                 save_with_color,
+                                 cat_id_colormap,
                                  things_other):
     annotation_semantic_seg = []
     for working_idx, annotation in enumerate(annotations_set):
@@ -57,7 +69,9 @@ def extract_semantic_single_core(proc_id,
 
         pan = rgb2id(pan_format)
         semantic = np.zeros(pan.shape, dtype=np.uint8)
-
+        if save_with_color:
+            rgb_seg_shape = list(pan.shape) ; rgb_seg_shape.append(3)
+            semantic = np.zeros(rgb_seg_shape, dtype=np.uint8)
         RLE_per_category = defaultdict(list)
         for segm_info in annotation['segments_info']:
             cat_id = segm_info['category_id']
@@ -65,7 +79,10 @@ def extract_semantic_single_core(proc_id,
                 cat_id = OTHER_CLASS_ID
             mask = pan == segm_info['id']
             if save_as_png:
-                semantic[mask] = cat_id
+                if save_with_color:
+                    semantic[mask] = cat_id_colormap[str(cat_id)]
+                else:
+                    semantic[mask] = cat_id
             else:
                 RLE = COCOmask.encode(np.asfortranarray(mask.astype('uint8')))
                 RLE['counts'] = RLE['counts'].decode('utf8')
@@ -97,6 +114,8 @@ def extract_semantic(input_json_file,
                      output_json_file,
                      semantic_seg_folder,
                      categories_json_file,
+                     save_with_color,
+                     cat_id_colormap,
                      things_other):
     start_time = time.time()
     with open(input_json_file, 'r') as f:
@@ -123,7 +142,10 @@ def extract_semantic(input_json_file,
                             options must be used specified")
         else:
             save_as_png = True
-            print("in PNG format:")
+            if save_with_color:
+                print("in PNG format with color:")
+            else:
+                print("in PNG format:")
             print("\tFolder with semnatic segmentations: {}".format(semantic_seg_folder))
             if not os.path.isdir(semantic_seg_folder):
                 print("Creating folder {} for semantic segmentation PNGs".format(semantic_seg_folder))
@@ -148,7 +170,8 @@ def extract_semantic(input_json_file,
         p = workers.apply_async(extract_semantic_single_core,
                                 (proc_id, annotations_set, segmentations_folder,
                                  output_json_file, semantic_seg_folder,
-                                 categories, save_as_png, things_other))
+                                 categories, save_as_png, 
+                                 save_with_color, cat_id_colormap, things_other))
         processes.append(p)
     annotations_coco_semantic_seg = []
     for p in processes:
@@ -201,13 +224,21 @@ if __name__ == "__main__":
     parser.add_argument('--categories_json_file', type=str,
                         help="JSON file with Panoptic COCO categories information",
                         default='./panoptic_coco_categories.json')
+    parser.add_argument('--save_with_color', type=bool,
+                        help="If '--segmantic_seg_folder' is specificed, \
+                        resulting semantic segmentation PNGs will be rbg, \
+                        based on the cateogory colormap in '--categories_json_file'",
+                        default=False)                    
     parser.add_argument('--things_other', action='store_true',
                         help="Is set, all things classes are merged into one \
                         'other' class")
     args = parser.parse_args()
+    cat_id_colormap = cat_id2rgb(args.categories_json_file)
     extract_semantic(args.input_json_file,
                      args.segmentations_folder,
                      args.output_json_file,
                      args.semantic_seg_folder,
                      args.categories_json_file,
+                     args.save_with_color,
+                     cat_id_colormap,
                      args.things_other)
