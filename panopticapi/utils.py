@@ -94,7 +94,7 @@ def id2rgb(id_map):
     return color
 
 
-def cat_id2rgb(cat_id_map, categories_json_file):
+def cat_id2rgb(categories_json_file):
     info = json.load(open(categories_json_file, "r"))
     cat_id_colormap = {}
     for cat in info:
