@@ -51,6 +51,7 @@ def extract_semantic_single_core(proc_id,
                                  categories,
                                  save_as_png,
                                  save_with_color,
+                                 cat_id_colormap,
                                  things_other):
     annotation_semantic_seg = []
     for working_idx, annotation in enumerate(annotations_set):
@@ -114,6 +115,7 @@ def extract_semantic(input_json_file,
                      semantic_seg_folder,
                      categories_json_file,
                      save_with_color,
+                     cat_id_colormap,
                      things_other):
     start_time = time.time()
     with open(input_json_file, 'r') as f:
@@ -168,7 +170,8 @@ def extract_semantic(input_json_file,
         p = workers.apply_async(extract_semantic_single_core,
                                 (proc_id, annotations_set, segmentations_folder,
                                  output_json_file, semantic_seg_folder,
-                                 categories, save_as_png, save_with_color, things_other))
+                                 categories, save_as_png, 
+                                 save_with_color, cat_id_colormap, things_other))
         processes.append(p)
     annotations_coco_semantic_seg = []
     for p in processes:
@@ -237,4 +240,5 @@ if __name__ == "__main__":
                      args.semantic_seg_folder,
                      args.categories_json_file,
                      args.save_with_color,
+                     cat_id_colormap,
                      args.things_other)
