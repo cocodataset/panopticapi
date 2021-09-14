@@ -32,6 +32,7 @@ class IdGenerator():
     class ids are presented and category_info record is a dict with fields
     'isthing' and 'color'
     '''
+
     def __init__(self, categories):
         self.taken_colors = set([0, 0, 0])
         self.categories = categories

@@ -3,11 +3,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
+import os
 import numpy as np
 import json
 import time
-from datetime import timedelta
 from collections import defaultdict
 import argparse
 import multiprocessing
@@ -19,19 +18,20 @@ from panopticapi.utils import get_traceback, rgb2id
 OFFSET = 256 * 256 * 256
 VOID = 0
 
-class PQStatCat():
-        def __init__(self):
-            self.iou = 0.0
-            self.tp = 0
-            self.fp = 0
-            self.fn = 0
 
-        def __iadd__(self, pq_stat_cat):
-            self.iou += pq_stat_cat.iou
-            self.tp += pq_stat_cat.tp
-            self.fp += pq_stat_cat.fp
-            self.fn += pq_stat_cat.fn
-            return self
+class PQStatCat():
+    def __init__(self):
+        self.iou = 0.0
+        self.tp = 0
+        self.fp = 0
+        self.fn = 0
+
+    def __iadd__(self, pq_stat_cat):
+        self.iou += pq_stat_cat.iou
+        self.tp += pq_stat_cat.tp
+        self.fp += pq_stat_cat.fp
+        self.fn += pq_stat_cat.fn
+        return self
 
 
 class PQStat():
@@ -65,7 +65,8 @@ class PQStat():
             pq_class = iou / (tp + 0.5 * fp + 0.5 * fn)
             sq_class = iou / tp if tp != 0 else 0
             rq_class = tp / (tp + 0.5 * fp + 0.5 * fn)
-            per_class_results[label] = {'pq': pq_class, 'sq': sq_class, 'rq': rq_class}
+            per_class_results[label] = {
+                'pq': pq_class, 'sq': sq_class, 'rq': rq_class}
             pq += pq_class
             sq += sq_class
             rq += rq_class
@@ -80,12 +81,15 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
     idx = 0
     for gt_ann, pred_ann in annotation_set:
         if idx % 100 == 0:
-            print('Core: {}, {} from {} images processed'.format(proc_id, idx, len(annotation_set)))
+            print('Core: {}, {} from {} images processed'.format(
+                proc_id, idx, len(annotation_set)))
         idx += 1
 
-        pan_gt = np.array(Image.open(os.path.join(gt_folder, gt_ann['file_name'])), dtype=np.uint32)
+        pan_gt = np.array(Image.open(os.path.join(
+            gt_folder, gt_ann['file_name'])), dtype=np.uint32)
         pan_gt = rgb2id(pan_gt)
-        pan_pred = np.array(Image.open(os.path.join(pred_folder, pred_ann['file_name'])), dtype=np.uint32)
+        pan_pred = np.array(Image.open(os.path.join(
+            pred_folder, pred_ann['file_name'])), dtype=np.uint32)
         pan_pred = rgb2id(pan_pred)
 
         gt_segms = {el['id']: el for el in gt_ann['segments_info']}
@@ -98,16 +102,20 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
             if label not in pred_segms:
                 if label == VOID:
                     continue
-                raise KeyError('In the image with ID {} segment with ID {} is presented in PNG and not presented in JSON.'.format(gt_ann['image_id'], label))
+                raise KeyError('In the image with ID {} segment with ID {} is presented in PNG and not presented in JSON.'.format(
+                    gt_ann['image_id'], label))
             pred_segms[label]['area'] = label_cnt
             pred_labels_set.remove(label)
             if pred_segms[label]['category_id'] not in categories:
-                raise KeyError('In the image with ID {} segment with ID {} has unknown category_id {}.'.format(gt_ann['image_id'], label, pred_segms[label]['category_id']))
+                raise KeyError('In the image with ID {} segment with ID {} has unknown category_id {}.'.format(
+                    gt_ann['image_id'], label, pred_segms[label]['category_id']))
         if len(pred_labels_set) != 0:
-            raise KeyError('In the image with ID {} the following segment IDs {} are presented in JSON and not presented in PNG.'.format(gt_ann['image_id'], list(pred_labels_set)))
+            raise KeyError('In the image with ID {} the following segment IDs {} are presented in JSON and not presented in PNG.'.format(
+                gt_ann['image_id'], list(pred_labels_set)))
 
         # confusion matrix calculation
-        pan_gt_pred = pan_gt.astype(np.uint64) * OFFSET + pan_pred.astype(np.uint64)
+        pan_gt_pred = pan_gt.astype(np.uint64) * \
+            OFFSET + pan_pred.astype(np.uint64)
         gt_pred_map = {}
         labels, labels_cnt = np.unique(pan_gt_pred, return_counts=True)
         for label, intersection in zip(labels, labels_cnt):
@@ -129,7 +137,8 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
             if gt_segms[gt_label]['category_id'] != pred_segms[pred_label]['category_id']:
                 continue
 
-            union = pred_segms[pred_label]['area'] + gt_segms[gt_label]['area'] - intersection - gt_pred_map.get((VOID, pred_label), 0)
+            union = pred_segms[pred_label]['area'] + gt_segms[gt_label]['area'] - \
+                intersection - gt_pred_map.get((VOID, pred_label), 0)
             iou = intersection / union
             if iou > 0.5:
                 pq_stat[gt_segms[gt_label]['category_id']].tp += 1
@@ -156,19 +165,22 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
             intersection = gt_pred_map.get((VOID, pred_label), 0)
             # plus intersection with corresponding CROWD region if it exists
             if pred_info['category_id'] in crowd_labels_dict:
-                intersection += gt_pred_map.get((crowd_labels_dict[pred_info['category_id']], pred_label), 0)
+                intersection += gt_pred_map.get(
+                    (crowd_labels_dict[pred_info['category_id']], pred_label), 0)
             # predicted segment is ignored if more than half of the segment correspond to VOID and CROWD regions
             if intersection / pred_info['area'] > 0.5:
                 continue
             pq_stat[pred_info['category_id']].fp += 1
-    print('Core: {}, all {} images processed'.format(proc_id, len(annotation_set)))
+    print('Core: {}, all {} images processed'.format(
+        proc_id, len(annotation_set)))
     return pq_stat
 
 
 def pq_compute_multi_core(matched_annotations_list, gt_folder, pred_folder, categories):
     cpu_num = multiprocessing.cpu_count()
     annotations_split = np.array_split(matched_annotations_list, cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(annotations_split[0])))
+    print("Number of cores: {}, images per core: {}".format(
+        cpu_num, len(annotations_split[0])))
     workers = multiprocessing.Pool(processes=cpu_num)
     processes = []
     for proc_id, annotation_set in enumerate(annotations_split):
@@ -204,27 +216,33 @@ def pq_compute(gt_json_file, pred_json_file, gt_folder=None, pred_folder=None):
     print("\tJSON file: {}".format(pred_json_file))
 
     if not os.path.isdir(gt_folder):
-        raise Exception("Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
+        raise Exception(
+            "Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
     if not os.path.isdir(pred_folder):
-        raise Exception("Folder {} with predicted segmentations doesn't exist".format(pred_folder))
+        raise Exception(
+            "Folder {} with predicted segmentations doesn't exist".format(pred_folder))
 
     pred_annotations = {el['image_id']: el for el in pred_json['annotations']}
     matched_annotations_list = []
     for gt_ann in gt_json['annotations']:
         image_id = gt_ann['image_id']
         if image_id not in pred_annotations:
-            raise Exception('no prediction for the image with id: {}'.format(image_id))
+            raise Exception(
+                'no prediction for the image with id: {}'.format(image_id))
         matched_annotations_list.append((gt_ann, pred_annotations[image_id]))
 
-    pq_stat = pq_compute_multi_core(matched_annotations_list, gt_folder, pred_folder, categories)
+    pq_stat = pq_compute_multi_core(
+        matched_annotations_list, gt_folder, pred_folder, categories)
 
     metrics = [("All", None), ("Things", True), ("Stuff", False)]
     results = {}
     for name, isthing in metrics:
-        results[name], per_class_results = pq_stat.pq_average(categories, isthing=isthing)
+        results[name], per_class_results = pq_stat.pq_average(
+            categories, isthing=isthing)
         if name == 'All':
             results['per_class'] = per_class_results
-    print("{:10s}| {:>5s}  {:>5s}  {:>5s} {:>5s}".format("", "PQ", "SQ", "RQ", "N"))
+    print("{:10s}| {:>5s}  {:>5s}  {:>5s} {:>5s}".format(
+        "", "PQ", "SQ", "RQ", "N"))
     print("-" * (10 + 7 * 4))
 
     for name, _isthing in metrics:
@@ -255,4 +273,5 @@ if __name__ == "__main__":
                         help="Folder with prediction COCO format segmentations. \
                               Default: X if the corresponding json file is X.json")
     args = parser.parse_args()
-    pq_compute(args.gt_json_file, args.pred_json_file, args.gt_folder, args.pred_folder)
+    pq_compute(args.gt_json_file, args.pred_json_file,
+               args.gt_folder, args.pred_folder)

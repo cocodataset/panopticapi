@@ -3,8 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
-import json
+import os
 import glob
 import numpy as np
 import PIL.Image as Image
@@ -14,15 +13,17 @@ from panopticapi.utils import IdGenerator, save_json
 try:
     # set up path for cityscapes scripts
     # sys.path.append('./cityscapesScripts/')
-    from cityscapesscripts.helpers.labels import labels, id2label
+    from cityscapesscripts.helpers.labels import labels
 except Exception:
-    raise Exception("Please load Cityscapes scripts from https://github.com/mcordts/cityscapesScripts")
+    raise Exception(
+        "Please load Cityscapes scripts from https://github.com/mcordts/cityscapesScripts")
 
 original_format_folder = './gtFine/val/'
 # folder to store panoptic PNGs
 out_folder = './cityscapes_data/cityscapes_panoptic_val/'
 # json with segmentations information
 out_file = './cityscapes_data/cityscapes_panoptic_val.json'
+
 
 def panoptic_converter(original_format_folder, out_folder, out_file):
 
@@ -42,7 +43,8 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
 
     categories_dict = {cat['id']: cat for cat in categories}
 
-    file_list = sorted(glob.glob(os.path.join(original_format_folder, '*/*_gtFine_instanceIds.png')))
+    file_list = sorted(glob.glob(os.path.join(
+        original_format_folder, '*/*_gtFine_instanceIds.png')))
 
     images = []
     annotations = []
@@ -54,17 +56,17 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
 
         file_name = f.split('/')[-1]
         image_id = file_name.rsplit('_', 2)[0]
-        image_filename= '{}_leftImg8bit.png'.format(image_id)
+        image_filename = '{}_leftImg8bit.png'.format(image_id)
         # image entry, id for image is its filename without extension
         images.append({"id": image_id,
                        "width": original_format.shape[1],
                        "height": original_format.shape[0],
                        "file_name": image_filename})
 
-        pan_format = np.zeros((original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
+        pan_format = np.zeros(
+            (original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
         id_generator = IdGenerator(categories_dict)
 
-        idx = 0
         l = np.unique(original_format)
         segm_info = []
         for el in l:
@@ -82,7 +84,7 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
             segment_id, color = id_generator.get_id_and_color(semantic_id)
             pan_format[mask] = color
 
-            area = np.sum(mask) # segment area computation
+            area = np.sum(mask)  # segment area computation
 
             # bbox computation for a segment
             hor = np.sum(mask, axis=0)
@@ -110,9 +112,10 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
     d = {'images': images,
          'annotations': annotations,
          'categories': categories,
-        }
+         }
 
     save_json(d, out_file)
+
 
 if __name__ == "__main__":
     panoptic_converter(original_format_folder, out_folder, out_file)
