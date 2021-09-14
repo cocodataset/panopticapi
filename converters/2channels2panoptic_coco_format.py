@@ -20,13 +20,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
+import os
 import argparse
 import numpy as np
 import json
 import time
 import multiprocessing
-import itertools
 
 import PIL.Image as Image
 
@@ -34,21 +33,26 @@ from panopticapi.utils import get_traceback, IdGenerator, save_json
 
 OFFSET = 1000
 
+
 @get_traceback
 def convert_single_core(proc_id, image_set, categories, source_folder, segmentations_folder, VOID=0):
     annotations = []
     for working_idx, image_info in enumerate(image_set):
         if working_idx % 100 == 0:
-            print('Core: {}, {} from {} images converted'.format(proc_id, working_idx, len(image_set)))
+            print('Core: {}, {} from {} images converted'.format(
+                proc_id, working_idx, len(image_set)))
 
         file_name = '{}.png'.format(image_info['file_name'].rsplit('.')[0])
         try:
-            original_format = np.array(Image.open(os.path.join(source_folder, file_name)), dtype=np.uint32)
+            original_format = np.array(Image.open(
+                os.path.join(source_folder, file_name)), dtype=np.uint32)
         except IOError:
-            raise KeyError('no prediction png file for id: {}'.format(image_info['id']))
+            raise KeyError(
+                'no prediction png file for id: {}'.format(image_info['id']))
 
         pan = OFFSET * original_format[:, :, 0] + original_format[:, :, 1]
-        pan_format = np.zeros((original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
+        pan_format = np.zeros(
+            (original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
 
         id_generator = IdGenerator(categories)
 
@@ -70,7 +74,8 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
                             'file_name': file_name,
                             "segments_info": segm_info})
 
-        Image.fromarray(pan_format).save(os.path.join(segmentations_folder, file_name))
+        Image.fromarray(pan_format).save(
+            os.path.join(segmentations_folder, file_name))
     print('Core: {}, all {} images processed'.format(proc_id, len(image_set)))
     return annotations
 
@@ -93,7 +98,8 @@ def converter(source_folder, images_json_file, categories_json_file,
     if segmentations_folder is None:
         segmentations_folder = predictions_json_file.rsplit('.', 1)[0]
     if not os.path.isdir(segmentations_folder):
-        print("Creating folder {} for panoptic segmentation PNGs".format(segmentations_folder))
+        print("Creating folder {} for panoptic segmentation PNGs".format(
+            segmentations_folder))
         os.mkdir(segmentations_folder)
 
     print("CONVERTING...")
@@ -106,7 +112,8 @@ def converter(source_folder, images_json_file, categories_json_file,
     print('\n')
     cpu_num = multiprocessing.cpu_count()
     images_split = np.array_split(images, cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(images_split[0])))
+    print("Number of cores: {}, images per core: {}".format(
+        cpu_num, len(images_split[0])))
     workers = multiprocessing.Pool(processes=cpu_num)
     processes = []
     for proc_id, image_set in enumerate(images_split):

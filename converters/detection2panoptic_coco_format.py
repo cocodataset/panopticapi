@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
+import os
 import argparse
 import numpy as np
 import json
@@ -25,7 +25,9 @@ try:
     from pycocotools import mask as COCOmask
     from pycocotools.coco import COCO as COCO
 except Exception:
-    raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
+    raise Exception(
+        "Please install pycocotools module from https://github.com/cocodataset/cocoapi")
+
 
 @get_traceback
 def convert_detection_to_panoptic_coco_format_single_core(
@@ -55,8 +57,9 @@ def convert_detection_to_panoptic_coco_format_single_core(
             if ann['category_id'] not in categories:
                 raise Exception('Panoptic coco categories file does not contain \
                     category with id: {}'.format(ann['category_id'])
-                )
-            segment_id, color = id_generator.get_id_and_color(ann['category_id'])
+                                )
+            segment_id, color = id_generator.get_id_and_color(
+                ann['category_id'])
             mask = coco_detection.annToMask(ann)
             overlaps_map += mask
             pan_format[mask == 1] = color
@@ -66,11 +69,13 @@ def convert_detection_to_panoptic_coco_format_single_core(
             segments_info.append(ann)
 
         if np.sum(overlaps_map > 1) != 0:
-            raise Exception("Segments for image {} overlap each other.".format(img_id))
+            raise Exception(
+                "Segments for image {} overlap each other.".format(img_id))
         panoptic_record['segments_info'] = segments_info
         annotations_panoptic.append(panoptic_record)
 
-        Image.fromarray(pan_format).save(os.path.join(segmentations_folder, file_name))
+        Image.fromarray(pan_format).save(
+            os.path.join(segmentations_folder, file_name))
 
     print('Core: {}, all {} images processed'.format(proc_id, len(img_ids)))
     return annotations_panoptic
@@ -85,7 +90,8 @@ def convert_detection_to_panoptic_coco_format(input_json_file,
     if segmentations_folder is None:
         segmentations_folder = output_json_file.rsplit('.', 1)[0]
     if not os.path.isdir(segmentations_folder):
-        print("Creating folder {} for panoptic segmentation PNGs".format(segmentations_folder))
+        print("Creating folder {} for panoptic segmentation PNGs".format(
+            segmentations_folder))
         os.mkdir(segmentations_folder)
 
     print("CONVERTING...")
@@ -106,7 +112,8 @@ def convert_detection_to_panoptic_coco_format(input_json_file,
 
     cpu_num = multiprocessing.cpu_count()
     img_ids_split = np.array_split(img_ids, cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(img_ids_split[0])))
+    print("Number of cores: {}, images per core: {}".format(
+        cpu_num, len(img_ids_split[0])))
     workers = multiprocessing.Pool(processes=cpu_num)
     processes = []
     for proc_id, img_ids in enumerate(img_ids_split):

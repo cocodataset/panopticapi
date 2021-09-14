@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
+import os
 import argparse
 import numpy as np
 import json
@@ -28,7 +28,9 @@ try:
     # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
 except Exception:
-    raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
+    raise Exception(
+        "Please install pycocotools module from https://github.com/cocodataset/cocoapi")
+
 
 @get_traceback
 def convert_panoptic_to_detection_coco_format_single_core(
@@ -47,7 +49,8 @@ def convert_panoptic_to_detection_coco_format_single_core(
                 Image.open(os.path.join(segmentations_folder, file_name)), dtype=np.uint32
             )
         except IOError:
-            raise KeyError('no prediction png file for id: {}'.format(annotation['image_id']))
+            raise KeyError('no prediction png file for id: {}'.format(
+                annotation['image_id']))
         pan = rgb2id(pan_format)
 
         for segm_info in annotation['segments_info']:
@@ -62,7 +65,8 @@ def convert_panoptic_to_detection_coco_format_single_core(
             segm_info['segmentation'] = rle
             annotations_detection.append(segm_info)
 
-    print('Core: {}, all {} images processed'.format(proc_id, len(annotations_set)))
+    print('Core: {}, all {} images processed'.format(
+        proc_id, len(annotations_set)))
     return annotations_detection
 
 
@@ -98,7 +102,8 @@ def convert_panoptic_to_detection_coco_format(input_json_file,
 
     cpu_num = multiprocessing.cpu_count()
     annotations_split = np.array_split(annotations_panoptic, cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(annotations_split[0])))
+    print("Number of cores: {}, images per core: {}".format(
+        cpu_num, len(annotations_split[0])))
     workers = multiprocessing.Pool(processes=cpu_num)
     processes = []
     for proc_id, annotations_set in enumerate(annotations_split):

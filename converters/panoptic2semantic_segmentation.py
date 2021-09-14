@@ -11,7 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
+import os
 import argparse
 import numpy as np
 import json
@@ -28,9 +28,11 @@ try:
     # sys.path.append('./cocoapi-master/PythonAPI/')
     from pycocotools import mask as COCOmask
 except Exception:
-    raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
+    raise Exception(
+        "Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 OTHER_CLASS_ID = 183
+
 
 @get_traceback
 def extract_semantic_single_core(proc_id,
@@ -49,11 +51,13 @@ def extract_semantic_single_core(proc_id,
                                                                  len(annotations_set)))
         try:
             pan_format = np.array(
-                Image.open(os.path.join(segmentations_folder, annotation['file_name'])),
+                Image.open(os.path.join(
+                    segmentations_folder, annotation['file_name'])),
                 dtype=np.uint32
             )
         except IOError:
-            raise KeyError('no prediction png file for id: {}'.format(annotation['image_id']))
+            raise KeyError('no prediction png file for id: {}'.format(
+                annotation['image_id']))
 
         pan = rgb2id(pan_format)
         semantic = np.zeros(pan.shape, dtype=np.uint8)
@@ -72,7 +76,8 @@ def extract_semantic_single_core(proc_id,
                 RLE_per_category[cat_id].append(RLE)
 
         if save_as_png:
-            Image.fromarray(semantic).save(os.path.join(semantic_seg_folder, annotation['file_name']))
+            Image.fromarray(semantic).save(os.path.join(
+                semantic_seg_folder, annotation['file_name']))
         else:
             for cat_id, RLE_list in RLE_per_category.items():
                 if len(RLE_list) == 1:
@@ -87,7 +92,8 @@ def extract_semantic_single_core(proc_id,
                 semantic_seg_record["bbox"] = list(COCOmask.toBbox(RLE))
                 semantic_seg_record["iscrowd"] = 0
                 annotation_semantic_seg.append(semantic_seg_record)
-    print('Core: {}, all {} images processed'.format(proc_id, len(annotations_set)))
+    print('Core: {}, all {} images processed'.format(
+        proc_id, len(annotations_set)))
 
     return annotation_semantic_seg
 
@@ -124,9 +130,11 @@ def extract_semantic(input_json_file,
         else:
             save_as_png = True
             print("in PNG format:")
-            print("\tFolder with semnatic segmentations: {}".format(semantic_seg_folder))
+            print("\tFolder with semnatic segmentations: {}".format(
+                semantic_seg_folder))
             if not os.path.isdir(semantic_seg_folder):
-                print("Creating folder {} for semantic segmentation PNGs".format(semantic_seg_folder))
+                print("Creating folder {} for semantic segmentation PNGs".format(
+                    semantic_seg_folder))
                 os.mkdir(semantic_seg_folder)
     else:
         print("in COCO detection format:")
@@ -141,7 +149,8 @@ def extract_semantic(input_json_file,
 
     cpu_num = multiprocessing.cpu_count()
     annotations_split = np.array_split(annotations, cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(annotations_split[0])))
+    print("Number of cores: {}, images per core: {}".format(
+        cpu_num, len(annotations_split[0])))
     workers = multiprocessing.Pool(processes=cpu_num)
     processes = []
     for proc_id, annotations_set in enumerate(annotations_split):

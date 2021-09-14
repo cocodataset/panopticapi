@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os, sys
+import os
 import argparse
 import numpy as np
 from collections import defaultdict
@@ -23,12 +23,13 @@ import copy
 
 from panopticapi.utils import IdGenerator, id2rgb, save_json
 
-import PIL.Image     as Image
+import PIL.Image as Image
 
 try:
     from pycocotools import mask as COCOmask
 except Exception:
-    raise Exception("Please install pycocotools module from https://github.com/cocodataset/cocoapi")
+    raise Exception(
+        "Please install pycocotools module from https://github.com/cocodataset/cocoapi")
 
 
 def combine_to_panoptic_single_core(proc_id, img_ids, img_id2img, inst_by_image,
@@ -108,7 +109,8 @@ def combine_to_panoptic_multi_core(img_id2img, inst_by_image,
                                    stuff_area_limit, categories):
     cpu_num = multiprocessing.cpu_count()
     img_ids_split = np.array_split(list(img_id2img), cpu_num)
-    print("Number of cores: {}, images per core: {}".format(cpu_num, len(img_ids_split[0])))
+    print("Number of cores: {}, images per core: {}".format(
+        cpu_num, len(img_ids_split[0])))
     workers = multiprocessing.Pool(processes=cpu_num)
     processes = []
     for proc_id, img_ids in enumerate(img_ids_split):
@@ -144,7 +146,8 @@ def combine_predictions(semseg_json_file, instseg_json_file, images_json_file,
     if segmentations_folder is None:
         segmentations_folder = panoptic_json_file.rsplit('.', 1)[0]
     if not os.path.isdir(segmentations_folder):
-        print("Creating folder {} for panoptic segmentation PNGs".format(segmentations_folder))
+        print("Creating folder {} for panoptic segmentation PNGs".format(
+            segmentations_folder))
         os.mkdir(segmentations_folder)
 
     print("Combining:")
@@ -166,7 +169,8 @@ def combine_predictions(semseg_json_file, instseg_json_file, images_json_file,
             continue
         inst_by_image[inst['image_id']].append(inst)
     for img_id in inst_by_image.keys():
-        inst_by_image[img_id] = sorted(inst_by_image[img_id], key=lambda el: -el['score'])
+        inst_by_image[img_id] = sorted(
+            inst_by_image[img_id], key=lambda el: -el['score'])
 
     sem_by_image = defaultdict(list)
     for sem in sem_results:
