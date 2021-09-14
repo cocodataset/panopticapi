@@ -22,7 +22,6 @@ from panopticapi.utils import get_traceback, IdGenerator, save_json
 try:
     # set up path for pycocotools
     # sys.path.append('./cocoapi-master/PythonAPI/')
-    from pycocotools import mask as COCOmask
     from pycocotools.coco import COCO as COCO
 except Exception:
     raise Exception(

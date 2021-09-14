@@ -67,7 +67,6 @@ def panoptic_converter(original_format_folder, out_folder, out_file):
             (original_format.shape[0], original_format.shape[1], 3), dtype=np.uint8)
         id_generator = IdGenerator(categories_dict)
 
-        idx = 0
         l = np.unique(original_format)
         segm_info = []
         for el in l:

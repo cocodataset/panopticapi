@@ -7,7 +7,6 @@ import os
 import numpy as np
 import json
 import time
-from datetime import timedelta
 from collections import defaultdict
 import argparse
 import multiprocessing
