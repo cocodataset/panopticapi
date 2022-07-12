@@ -58,10 +58,10 @@ In COCO stuff segmentation challenge 2017 all thing classes were merged into one
 In the panoptic segmentation [paper](https://arxiv.org/abs/1801.00868) naive format to store panoptic segmentation is proposed. We call the format *2 channel format*. Each segment is defined by two labels:
 (1) semantic category label and (2) instance ID label. Together this two labels form a unique pair that distinguishes one segment from another. These two labels are stored as first two channels of a PNG file correspondingly. Example of panoptic data saved in the 2 channel format can be found in [sample_data/panoptic_examples_2ch_format](https://github.com/cocodataset/panopticapi/blob/master/sample_data/panoptic_examples_2ch_format) folder.
 
-The script `converters/2channels2panoptic_coco_format.py` converts panoptic segmentation prediction from 2 channels format to COCO panoptic format:
+The script `converters/twochannels2panoptic_coco_format.py` converts panoptic segmentation prediction from 2 channels format to COCO panoptic format:
 
 ``` bash
-python converters/2channels2panoptic_coco_format.py \
+python converters/twochannels2panoptic_coco_format.py \
   --source_folder sample_data/panoptic_examples_2ch_format \
   --images_json_file sample_data/images_info_examples.json \
   --prediction_json_file converted_data/panoptic_coco_from_2ch.json
