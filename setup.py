@@ -5,8 +5,9 @@ from setuptools import setup, Extension
 
 setup(
     name='panopticapi',
-    packages=['panopticapi'],
-    package_dir = {'panopticapi': 'panopticapi'},
+    packages=['panopticapi', 'panopticapi_converters'],
+    package_dir = {'panopticapi': 'panopticapi',
+                   'panopticapi_converters': 'converters'},
     install_requires=[
         'numpy',
         'Pillow',
