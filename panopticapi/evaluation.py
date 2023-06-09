@@ -83,9 +83,17 @@ def pq_compute_single_core(proc_id, annotation_set, gt_folder, pred_folder, cate
             print('Core: {}, {} from {} images processed'.format(proc_id, idx, len(annotation_set)))
         idx += 1
 
-        pan_gt = np.array(Image.open(os.path.join(gt_folder, gt_ann['file_name'])), dtype=np.uint32)
+        pan_gt_path = gt_ann['file_name']
+        if not os.path.split(pan_gt_path)[0]:
+            pan_gt_path = os.path.join(gt_folder, pan_gt_path)
+
+        pan_pred_path = pred_ann['file_name']
+        if not os.path.split(pan_pred_path)[0]:
+            pan_pred_path = os.path.join(pred_folder, pan_pred_path)
+
+        pan_gt = np.array(Image.open(pan_gt_path), dtype=np.uint32)
         pan_gt = rgb2id(pan_gt)
-        pan_pred = np.array(Image.open(os.path.join(pred_folder, pred_ann['file_name'])), dtype=np.uint32)
+        pan_pred = np.array(Image.open(pan_pred_path), dtype=np.uint32)
         pan_pred = rgb2id(pan_pred)
 
         gt_segms = {el['id']: el for el in gt_ann['segments_info']}
