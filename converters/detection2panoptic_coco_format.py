@@ -47,7 +47,7 @@ def convert_detection_to_panoptic_coco_format_single_core(
         anns = coco_detection.loadAnns(anns_ids)
 
         panoptic_record = {}
-        panoptic_record['image_id'] = img_id
+        panoptic_record['image_id'] = int(img_id)
         file_name = '{}.png'.format(img['file_name'].rsplit('.')[0])
         panoptic_record['file_name'] = file_name
         segments_info = []
